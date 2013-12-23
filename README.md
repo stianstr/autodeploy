@@ -1,4 +1,2 @@
 autodeploy
 ==========
-
-Work in progress.

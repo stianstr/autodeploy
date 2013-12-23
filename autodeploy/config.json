@@ -1,0 +1,42 @@
+{
+  "web": {
+    "host":    "0.0.0.0",
+    "port":    8080,
+    "users":   [["user1","pw1"], ["user2","pw2"]]
+  },
+  "git": {
+    "url":     "git@git.server.com:repos/repos.git",
+    "workdir": "/srv/autodeploy/data/work",
+    "sshkey":  "/srv/autodeploy/data/ssh/id_dsa"
+  },
+  "result": {
+    "datadir": "/srv/autodeploy/data/log"
+  },
+  "jenkins": {
+    "url":     "http://jenkins.server.com:8080",
+    "project": "MyApp"
+  },
+  "servers": [
+    {
+      "alias":     "dev",
+      "hostname":  "dev.server.com",
+      "username":  "user",
+      "password":  "password",
+      "directory": "/srv/myapp"
+    },
+    {
+      "alias":     "staging",
+      "hostname":  "staging.server.com",
+      "username":  "user",
+      "password":  "password",
+      "directory": "/srv/myapp"
+    },
+    {
+      "alias":     "production",
+      "hostname":  "production.server.com",
+      "username":  "user",
+      "password":  "password",
+      "directory": "/srv/myapp"
+    }
+  ]
+}

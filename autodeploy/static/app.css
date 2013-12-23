@@ -1,0 +1,90 @@
+div.row > div { 
+    margin-bottom: 20px;
+}
+
+div.row > div > h2 {
+    margin-top: 0;
+    border-bottom: 1px solid #ccc;
+}
+
+div.main-container {
+    margin: 15px;
+}
+
+body {
+    padding-top: 0;
+}
+header {
+    margin-top: 0;
+    padding-top: 20px;
+    background: #efefef;
+}
+header h3 {
+    margin: 0;
+    margin-right: 10px;
+    float: right;
+}
+.tab-content h1 {
+    border-bottom: 1px solid #ccc;
+}
+.tab-content h2 {
+    margin-top: 40px;
+}
+.tab-content h2:first-child {
+    margin-top: 20px;
+}
+.nav-tabs {
+}
+.nav-tabs li:first-child {
+    margin-left: 20px;
+}
+.tab-content {
+    padding: 20px;
+    padding-top: 0px;
+}
+
+.form-group {
+    margin-bottom: 5px;
+}
+.branch-value .label,
+.status-value .label {
+    font-size: 100%;
+}
+
+.checklist .ok {
+    color: green;
+}
+.checklist .error {
+    color: red;
+}
+.checklist li .checklist-details {
+    color: black;
+}
+.checklist li {
+    padding-bottom: 10px;
+}
+.checklist li {
+    list-style: none;
+}
+.checklist li .alert {
+    margin-left: 18px;
+}
+.checklist {
+    padding-left: 0;
+}
+
+.modal-dialog {
+    width: 900px;
+}
+.modal-dialog h2 {
+    margin-top: 0;
+}
+
+.help-container h3.wrong {
+    border-bottom: 1px solid red;
+    color: red;
+}
+.help-container h3.correct {
+    border-bottom: 1px solid green;
+    color: green;
+}

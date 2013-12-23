@@ -1,0 +1,91 @@
+# Todo
+
+* implement merge
+* log merges
+* disallow using master as branch
+* implement branches command
+* implement user, so correctly logged
+* ssh key to log into servers
+- check db/env updates
+- cleanup/rewrite:
+  - let each command(-step) be a class based on a base class
+    - that has exceptionToResult and a standardized way of acting
+    - let these be pluggable so one f.ex. can switch from git to svn by writing some classes
+    - don't check everything each time (f.ex. don't check build status if branch does not exist)
+    - clean up the whole result/check structure and make it less messy and more explicit
+
+Later:
+
+- Change from file-storage to mongodb or similar
+- Log commands and their output - show console-ish thing live + for each action
+- Log deleted branches
+- Pluggable auth (f.ex. LDAP), or at least separate config file for users for irssi perl script
+- Sanity check in merge
+- Do not show checks by deafult, only deploys?
+- Filter on action/status[/more] in "last 10 actions"
+- Option to show actions older than last 10?
+- Make more modular. Plugins for the different steps.
+- Generate procedure from texts delivered by plugins? Or option to add a procedure as markdown file
+- Sockets/live UI. 
+  - Update actions list as actions happen.
+  - Update server branches as deploys/merges happen.
+  - Periodically fetch branches in separate threads, so gets updated
+    even if something is deployed outside autodeploy?
+- Periodically look for uncomitted changes on servers and show them in UI?
+
+
+# Check if there are active requests
+
+wget -q --user=foo --password=foo \
+ "http://server.com/server-status?auto" \
+ -O -|grep BusyWorkers 
+
+# check for composer updates
+
+got_composer_packages=0
+composer -n install --dry-run | grep -i "nothing to install" >/dev/null 2>/dev/null
+if [ $? -ne 0 ]; then
+    got_composer_packages=1
+fi
+
+# Inspiration
+
+http://danbarber.me/using-git-for-deployment/
+http://joemaller.com/990/a-web-focused-git-workflow/
+https://github.com/mislav/git-deploy
+http://nxvl.blogspot.no/2012/07/a-continous-delivery-git-branching-model.html
+https://github.com/blog/1241-deploying-at-github   <<< this one!
+http://gitimmersion.com/lab_12.html
+http://git-scm.com/book/en/Git-Branching-Rebasing
+http://git-wt-commit.rubyforge.org/#git-wtf
+
+# >>>  Do not rebase commits that you have pushed to a public repository.  <<<
+
+
+# Workflow
+
+
+git pull                  # make sure master is up to date
+git branch mybranch       # create branch (but does not check it out) or git checkout -b mybranch to check it out too?
+git push origin mybranch  # push it do repos
+git checkout mybranch     # switch to the new branch
+
+...work...
+
+git commit
+git push origin mybranch  # push commit(s) into branch
+
+...if master got updates, rebase...
+
+git rebase master
+
+...done working...
+...branch proven stable in production...
+
+git checkout master
+git merge --no-ff mybranch  # --no-ff skips fast-forward, preserving history: http://nvie.com/posts/a-successful-git-branching-model/
+git push origin master
+
+git branch -d mybranch    # delete the branch locally
+git push origin :mybranch # delete the branch in repos
+

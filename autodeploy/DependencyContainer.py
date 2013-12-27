@@ -24,7 +24,7 @@ class DependencyContainer:
 
     def getConfigFile(self):
         files = [
-            '/etc/autodeploy.json',
+            '/etc/autodeploy/config.json',
             os.path.dirname(os.path.realpath(__file__)) + '/config.local.json',
             os.path.dirname(os.path.realpath(__file__)) + '/config.json'
         ]
@@ -34,14 +34,18 @@ class DependencyContainer:
         raise Exception('No config file found')
 
     def getServerConfig(self, serverAlias):
-        for server in self.config['servers']:
-            if server['alias'] == serverAlias:
-                return server
+	server = None
+        for _server in self.config['servers']:
+            print _server
+            if _server['alias'] == serverAlias:
+                server = _server
+	if not server:
+            raise Exception('No such server: %s' % serverAlias)
         if not server.has_key('sshkey'):
             server['sshkey'] = None
         if not server.has_key('password'):
             server['password'] = None
-        raise Exception('No such server: %s' % serverAlias)
+        return server
 
     def getCiServer(self):
         return CiServer(

@@ -93,11 +93,8 @@ def _exceptionToResult(exception, result):
 def getServers():
     servers = dc.config['servers']
     for server in servers:
-        try:
-            bc = dc.getRemoteBranchChecker(server['alias'])
-            server['branch'] = bc.get()
-        except Exception, e:
-            server['branch'] = '(%s)' % e.message
+        bc = dc.getRemoteBranchChecker(server['alias'])
+        server['branch'] = bc.get()
     return servers
 
 def getBranches():

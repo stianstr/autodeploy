@@ -1,85 +1,118 @@
-<h1>Deploy procedure</h1>
+<h1>Background</h1>
 
-<span class="label label-danger">todo:</span> clean this up
+<p>Autodeploy is based on <a href="https://github.com/blog/1241-deploying-at-github">githubs deployment procedure</a>. The key idea is that the <b>master branch is always stable</b>, and never worked on directly. Whenever you want to change something, you <b>always create a branch</b>. When the branch is ready, it should pass build+tests at the CI server (Jenkins or similar). When it has been successully built, the production server is switched from master to the branch. Stability is then observed for a while. If things look okay, then the branch is merged into master, and the server is switched back to master. If things go bad, we roll back to the always stable master.</p>
 
-<h3>Check that branch can be deployed</h3>
-<ul>
- <li>Branch contains latest commit in master</li>
- <li>Repository at deploy-to-server does not have uncomitted changes</li>
- <li>Build status at CI server is green</li>
- <li>Branch deployed at deploy-to-server is master</li>
-</ul>
+<p>This can of course be taken further, by f.ex. adding another staging step at a separate staging server. But either way, the branch should always be observed in production for a while before being merged into master, because from time to time, unexpected crap happens (only) in production.</p>
 
-<h3>Check branch deploy mode</h3>
-<ul>
- <li>
-  malicious
-  <ul>
-    <li>At least one DB update exist with mode:malicious, or</li>
-    <li>At least one ENV update exist with mode:malicious, or</li>
-    <li>Branch itself is tagged in git with mode:malicious</li>
-  </ul>
- </li>
- <li>
-  kind
-  <ul>
-   <li>At least one DB update exist with mode:kind, or</li>
-   <li>At least one ENV update exist with mode:kind, or</li>
-   <li>Branch itself is tagged in git with mode:kind</li>
-  </ul>
- </li>
- <li>
-  stealth
-  <ul>
-   <li>All updates have mode:stealth</li>
-   <li>Branch itself is not tagged</li>
-  </ul>
- </li>
-</ul>
- 
-<h3>Deploy</h3>
-<ul>
- <li>(Stop Apache if malicious, or hang Apache if kind)</li>
- <li>git pull</li>
- <li>Run ENV updates</li>
- <li>Run DB updates</li>
- <li>(Resume Apache if malicious or kind)</li>
-</ul>
+<h1>Workflow</h1>
 
-<h1>Update modes</h1>
+<h2>1. Develop</h2>
+
+<h4>1a. Create a new branch and work on it:</h4>
+
 <pre>
-1. stealth
+# Create a branch and switch to it
+git checkout -b my-cool-feature
 
-Can be run during daytime / while users are active,
-without stopping the system. Effectively means that if:
-a) user starts a request
-b) update is run
-c) user's request ends
-..then this will never cause any problems.
+# Work
+echo 'syntax error' >>index.php
 
-This means that f.ex. renaming a field, does NOT fall into this category.
-On the other hand, adding a new field that is not yet used by the code does.
+# Commit and push to branch
+git commit -a -m 'Added nice features'
+git push origin my-cool-feature
 
-2. kind
-
-Can be run during daytime / while users are active,
-but the system will ensure that no requests are processed
-when the code and db state are not in a consistent state.
-
-Basically means we:
-- set all new requests to hang
-- wait for all non-hanging requests to finish
-- run code update
-- run db/env updates
-- release hanging requests (redirect to itself, causing them to be run in new code)
-
-Criteria for such updates are that they are fairly quick, so hang-time will
-be short (typically <5sec).
-
-3. malicious
-
-Slow or critical updates that should only be run during nighttime
-/ when no users are on the system. Apache will be shut down entirely
-during the update process.
-
+# After the first push, the branch is visible to others, and in autodeploy's web ui.
+# Listing remote branches should show it:
+git branch -r
 </pre>
+
+<p>Continue to work, commit, push. After you're done, changes may have happened to master, and you want to...</p>
+
+<h4>1b. Merge in master</h4>
+<p>There are two ways to do this; rebase or pull.</p>
+
+<p>If you rebase, you basically stash all changes, update master, then apply all your changes on top of the recent master. If you work solo on your branch then that's probably best:</p>
+
+<pre>
+git rebase master
+git commit -a -m 'Merged in master'
+git push origin my-cool-feature
+</pre>
+
+<p>On the other hand, if you've already pushed commits and someone else is working on them, rebasing can make their life miserable. Then you'll rather want to merge the old-fashioned way:</p>
+
+<pre>
+git pull master
+git commit -a -m 'Merged in master'
+git push origin my-cool-feature
+</pre>
+
+Now you're almost ready to deploy. The CI server should pick up your latest push and build it. When it's done you can ask autodeploy to deploy your branch for staging.
+
+<h2>2. Deploy for staging</h2>
+
+<p>Ask Autodeploy to push your branch to the production server.</p>
+
+Using IRC:
+<pre>
+!deploy push my-cool-feature production-server
+</pre>
+
+Using API:
+<pre>
+curl http://autodeploy.myhost.com/deploy/my-cool-feature/production-server
+</pre>
+
+<h4>Autodeploy will then run the following checks:</h4>
+
+<h5>Branch should be of correct type</h5>
+<ul>
+ <li>Branch should exist</li>
+ <li>Branch should not be master</li>
+</ul>
+
+<h5>Build status should be green</h5>
+<ul>
+ <li>CI server should have built latest revision of branch</li>
+ <li>Status of that build should be OK (ie. all tests passed etc.)</li>
+</ul>
+
+<h5>Server should not have uncomitted changes</h5>
+<ul>
+ <li>When a branch is deployed for staging, the server we deploy to must not have uncomitted changes</li>
+ <li><a onclick="autoDeploy.openHelpDialog('uncomitted-changes')">Explain why this is important</a></li>
+</ul>
+
+<h5>Branch should contain master</h5>
+<ul>
+ <li>Branch should contain everything that master does, in other words:</li>
+ <li>The latest commit in master should also be in branch</li>
+ <li><a onclick="autoDeploy.openHelpDialog('master-in-branch')">Explain why this is important</a></li>
+</ul>
+
+<h5>Server should not already be staging</h5>
+<ul>
+ <li>We should take care to only stage one branch at a time, so:</li>
+ <li>The server we deploy to must not be staging another branch, it should be on master</li>
+ <li><a onclick="autoDeploy.openHelpDialog('already-staging')">Explain why this is important</a></li>
+</ul>
+
+<p>If all these are ok, server will be switched to your branch. You should now observe logs and user feedback for a while. If things look ok, proceed to merge branch into master.</p>
+
+<h2>3. Merge branch into master</h3>
+
+<p>Ask Autodeploy to merge branch into master, and switch production server back to master.</p>
+
+Using IRC:
+<pre>
+!deploy merge my-cool-feature production-server
+</pre>
+
+Using API:
+<pre>
+curl http://autodeploy.myhost.com/merge/my-cool-feature/production-server
+</pre>
+
+<h2>4. Goto 1</h2>
+
+We're done. Production server is now ready to stage another branch.

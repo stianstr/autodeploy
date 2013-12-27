@@ -6,6 +6,7 @@
 * implement branches command
 * implement user, so correctly logged
 * ssh key to log into servers
+- multi-project
 - check db/env updates
 - cleanup/rewrite:
   - let each command(-step) be a class based on a base class
